@@ -12,10 +12,12 @@ Handles session auth, API requests, and DFS traversal of product trees.
 ## Requirements
 - [Deno](https://deno.land/) (latest stable)
 - `.env` file:
+```
       SAP_SERVER_BASE_URL=https://example.com:50000/b1s/v1
       SAP_COMPANY_DB=YourCompanyDB
       SAP_USERNAME=YourUser
       SAP_PASSWORD=YourPass
+```
 
 ## Run
     deno run --allow-net --allow-read --allow-write main.ts
