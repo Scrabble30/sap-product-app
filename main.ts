@@ -1,4 +1,4 @@
-import { getItem, getItemLines } from "./sap-service.ts";
+import { getItem, getRawMaterials } from "./sap-item-service.ts";
 
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
@@ -6,15 +6,8 @@ if (import.meta.main) {
 
   console.log(item);
 
-  const types = ["Færdigvare", "Råvare", "HF"];
-  const itemLines = await getItemLines(item.ItemCode, types);
+  const rawMaterials = await getRawMaterials(item.ItemCode);
 
-  console.log("ItemLines:", itemLines.length);
-  console.log(itemLines);
-
-  /*const types = ["Færdigvare", "Råvare", "HF"];
-  const itemLines = await getItemLinesBatched("0021050008", types);
-
-  console.log("ItemLines:", itemLines.length);
-  console.log(itemLines);*/
+  console.log("RawMaterials:", rawMaterials.length);
+  console.log(rawMaterials);
 }
