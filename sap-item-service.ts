@@ -178,3 +178,50 @@ export async function getRawMaterials(itemCode: string) {
 
   return resultRawMaterials;
 }
+
+/**
+ * Computes nutritional values per 100g of the finished product,
+ * based on each raw material's composition and proportion of total weight.
+ *
+ * @param rawMaterials - List of raw materials with quantities in kg.
+ * @returns Nutritional content per 100g of final product.
+ * @throws If the total quantity is zero.
+ */
+export function calculateNutritionalContent(rawMaterials: RawMaterialLine[]) {
+  // Total quantity of all raw materials (in kg)
+  const totalQuantity = rawMaterials.reduce(
+    (sum, rawMaterialLine) => rawMaterialLine.quantity + sum,
+    0
+  );
+
+  if (totalQuantity === 0) {
+    throw new Error("Total quantity of raw materials is zero.");
+  }
+
+  const resultNutrition = {
+    energyKj: 0,
+    energyKcal: 0,
+    fat: 0,
+    fattyAcid: 0,
+    carbohydrate: 0,
+    sugars: 0,
+    protein: 0,
+    salt: 0,
+  };
+
+  for (const rawMaterialLine of rawMaterials) {
+    const rawMaterial = rawMaterialLine.rawMaterial;
+    const ratio = rawMaterialLine.quantity / totalQuantity;
+
+    resultNutrition.energyKj += rawMaterial.energyKj * ratio;
+    resultNutrition.energyKcal += rawMaterial.energyKcal * ratio;
+    resultNutrition.fat += rawMaterial.fat * ratio;
+    resultNutrition.fattyAcid += rawMaterial.fattyAcid * ratio;
+    resultNutrition.carbohydrate += rawMaterial.carbohydrate * ratio;
+    resultNutrition.sugars += rawMaterial.sugars * ratio;
+    resultNutrition.protein += rawMaterial.protein * ratio;
+    resultNutrition.salt += rawMaterial.salt * ratio;
+  }
+
+  return resultNutrition;
+}

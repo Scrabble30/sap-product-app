@@ -1,4 +1,8 @@
-import { getItem, getRawMaterials } from "./sap-item-service.ts";
+import {
+  calculateNutritionalContent,
+  getItem,
+  getRawMaterials,
+} from "./sap-item-service.ts";
 
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
@@ -10,4 +14,8 @@ if (import.meta.main) {
 
   console.log("RawMaterials:", rawMaterials.length);
   console.log(rawMaterials);
+
+  const nutritionalContent = calculateNutritionalContent(rawMaterials);
+
+  console.log("NutritionalContent:", nutritionalContent);
 }
