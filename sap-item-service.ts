@@ -1,6 +1,32 @@
 import { getProductTree } from "./sap-product-tree-service.ts";
 import { sapFetch } from "./sap-service.ts";
 
+export interface Nutrients {
+  /** Energy in kilojoules (kJ) per 100g */
+  energyKj: number;
+
+  /** Energy in kilocalories (kcal) per 100g */
+  energyKcal: number;
+
+  /** Fat in grams (g) per 100g */
+  fat: number;
+
+  /** Fatty acid in grams (g) per 100g */
+  fattyAcid: number;
+
+  /** Carbohydrate in grams (g) per 100g */
+  carbohydrate: number;
+
+  /** Sugars in grams (g) per 100g */
+  sugars: number;
+
+  /** Protein in grams (g) per 100g */
+  protein: number;
+
+  /** Salt in grams (g) per 100g */
+  salt: number;
+}
+
 export enum AllergenStatus {
   FreeFrom = 0,
   MayContainTraces = 1,
@@ -79,58 +105,14 @@ export interface Item {
   treeType: string;
   uCCFType: string;
 
-  /** Energy in kilojoules (kJ) per 100g, if applicable */
-  energyKj?: number;
-
-  /** Energy in kilocalories (kcal) per 100g, if applicable */
-  energyKcal?: number;
-
-  /** Fat in grams (g) per 100g, if applicable */
-  fat?: number;
-
-  /** Fatty acid in grams (g) per 100g, if applicable */
-  fattyAcid?: number;
-
-  /** Carbohydrate in grams (g) per 100g, if applicable */
-  carbohydrate?: number;
-
-  /** Sugars in grams (g) per 100g, if applicable */
-  sugars?: number;
-
-  /** Protein in grams (g) per 100g, if applicable */
-  protein?: number;
-
-  /** Salt in grams (g) per 100g, if applicable */
-  salt?: number;
+  nutrients?: Nutrients;
 
   allergens?: Allergens;
 }
 
 // Raw material with nutritional information
 export interface RawMaterial extends Item {
-  /** Energy in kilojoules (kJ) per 100g */
-  energyKj: number;
-
-  /** Energy in kilocalories (kcal) per 100g */
-  energyKcal: number;
-
-  /** Fat in grams (g) per 100g */
-  fat: number;
-
-  /** Fatty acid in grams (g) per 100g */
-  fattyAcid: number;
-
-  /** Carbohydrate in grams (g) per 100g */
-  carbohydrate: number;
-
-  /** Sugars in grams (g) per 100g */
-  sugars: number;
-
-  /** Protein in grams (g) per 100g */
-  protein: number;
-
-  /** Salt in grams (g) per 100g */
-  salt: number;
+  nutrients: Nutrients;
 
   allergens: Allergens;
 }
@@ -142,13 +124,22 @@ export interface RawMaterialLine {
   quantity: number;
 }
 
-function parseLocalizedNumber(value: string): number {
-  const normalized = value.replace(",", ".");
-  return parseFloat(normalized);
-}
+function parseLocalizedNumber(value?: string, fieldName?: string): number {
+  if (!value) {
+    throw new Error(
+      `Numeric value${fieldName ? ` for ${fieldName}` : ""} is missing or empty`
+    );
+  }
 
-function parseOptionalLocalizedNumber(value?: string): number | undefined {
-  return value ? parseLocalizedNumber(value) : undefined;
+  const parsed = parseFloat(value.replace(",", "."));
+
+  if (isNaN(parsed)) {
+    throw new Error(
+      `Invalid numeric value${fieldName ? ` for ${fieldName}` : ""}: ${value}`
+    );
+  }
+
+  return parsed;
 }
 
 function parseAllergenStatus(value?: string): AllergenStatus {
@@ -174,14 +165,8 @@ export function isValidItemCode(itemCode: string): boolean {
 export function isRawMaterial(item: Item): item is RawMaterial {
   return (
     item.uCCFType === "Råvare" &&
-    item.energyKj !== undefined &&
-    item.energyKcal !== undefined &&
-    item.fat !== undefined &&
-    item.fattyAcid !== undefined &&
-    item.carbohydrate !== undefined &&
-    item.sugars !== undefined &&
-    item.protein !== undefined &&
-    item.salt !== undefined
+    item.nutrients !== undefined &&
+    item.allergens !== undefined
   );
 }
 
@@ -249,18 +234,20 @@ export async function getItemWithNutrients(itemCode: string): Promise<Item> {
     itemName: data.ItemName,
     treeType: data.TreeType,
     uCCFType: data.U_CCF_Type,
-
-    energyKj: parseOptionalLocalizedNumber(data.U_BOYX_Energi),
-    energyKcal: parseOptionalLocalizedNumber(data.U_BOYX_Energik),
-    fat: parseOptionalLocalizedNumber(data.U_BOYX_fedt),
-    fattyAcid: parseOptionalLocalizedNumber(data.U_BOYX_fedtsyre),
-    carbohydrate: parseOptionalLocalizedNumber(data.U_BOYX_Kulhydrat),
-    sugars: parseOptionalLocalizedNumber(data.U_BOYX_sukkerarter),
-    protein: parseOptionalLocalizedNumber(data.U_BOYX_Protein),
-    salt: parseOptionalLocalizedNumber(data.U_BOYX_salt),
   };
 
   if (item.uCCFType === "Råvare") {
+    item.nutrients = {
+      energyKj: parseLocalizedNumber(data.U_BOYX_Energi),
+      energyKcal: parseLocalizedNumber(data.U_BOYX_Energik),
+      fat: parseLocalizedNumber(data.U_BOYX_fedt),
+      fattyAcid: parseLocalizedNumber(data.U_BOYX_fedtsyre),
+      carbohydrate: parseLocalizedNumber(data.U_BOYX_Kulhydrat),
+      sugars: parseLocalizedNumber(data.U_BOYX_sukkerarter),
+      protein: parseLocalizedNumber(data.U_BOYX_Protein),
+      salt: parseLocalizedNumber(data.U_BOYX_salt),
+    };
+
     item.allergens = {
       glutenAllergen: parseAllergenStatus(data.U_BOYX_gluten),
       shellfishAllergen: parseAllergenStatus(data.U_BOYX_Krebsdyr),
@@ -345,7 +332,9 @@ export async function getRawMaterials(itemCode: string) {
  * @returns Nutritional content per 100g of final product.
  * @throws If the total quantity is zero.
  */
-export function calculateNutritionalContent(rawMaterials: RawMaterialLine[]) {
+export function calculateNutritionalContent(
+  rawMaterials: RawMaterialLine[]
+): Nutrients {
   // Total quantity of all raw materials (in kg)
   const totalQuantity = rawMaterials.reduce(
     (sum, rawMaterialLine) => rawMaterialLine.quantity + sum,
@@ -356,7 +345,7 @@ export function calculateNutritionalContent(rawMaterials: RawMaterialLine[]) {
     throw new Error("Total quantity of raw materials is zero.");
   }
 
-  const resultNutrition = {
+  const resultNutrition: Nutrients = {
     energyKj: 0,
     energyKcal: 0,
     fat: 0,
@@ -371,14 +360,14 @@ export function calculateNutritionalContent(rawMaterials: RawMaterialLine[]) {
     const rawMaterial = rawMaterialLine.rawMaterial;
     const ratio = rawMaterialLine.quantity / totalQuantity;
 
-    resultNutrition.energyKj += rawMaterial.energyKj * ratio;
-    resultNutrition.energyKcal += rawMaterial.energyKcal * ratio;
-    resultNutrition.fat += rawMaterial.fat * ratio;
-    resultNutrition.fattyAcid += rawMaterial.fattyAcid * ratio;
-    resultNutrition.carbohydrate += rawMaterial.carbohydrate * ratio;
-    resultNutrition.sugars += rawMaterial.sugars * ratio;
-    resultNutrition.protein += rawMaterial.protein * ratio;
-    resultNutrition.salt += rawMaterial.salt * ratio;
+    resultNutrition.energyKj += rawMaterial.nutrients.energyKj * ratio;
+    resultNutrition.energyKcal += rawMaterial.nutrients.energyKcal * ratio;
+    resultNutrition.fat += rawMaterial.nutrients.fat * ratio;
+    resultNutrition.fattyAcid += rawMaterial.nutrients.fattyAcid * ratio;
+    resultNutrition.carbohydrate += rawMaterial.nutrients.carbohydrate * ratio;
+    resultNutrition.sugars += rawMaterial.nutrients.sugars * ratio;
+    resultNutrition.protein += rawMaterial.nutrients.protein * ratio;
+    resultNutrition.salt += rawMaterial.nutrients.salt * ratio;
   }
 
   return resultNutrition;

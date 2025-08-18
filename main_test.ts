@@ -8,6 +8,7 @@ import {
   getProductAllergens,
   getRawMaterials,
   isValidItemCode,
+  Nutrients,
 } from "./sap-item-service.ts";
 
 Deno.test(async function loginTest() {
@@ -95,7 +96,7 @@ Deno.test(async function getNutrientsTest() {
   const itemCode = "0021050008";
   const rawMaterials = await getRawMaterials(itemCode);
 
-  const expectedNutritionalContent = {
+  const expectedNutritionalContent: Nutrients = {
     energyKj: 2132.1,
     energyKcal: 509.39,
     fat: 34.78,
