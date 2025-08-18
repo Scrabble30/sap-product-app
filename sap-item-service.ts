@@ -100,24 +100,36 @@ export interface Allergens {
 
 // Generic item interface
 export interface Item {
+  /** Unique item identifier */
   itemCode: string;
+
+  /** Item name */
   itemName: string;
+
+  /** Indicates if the item is a product tree or a leaf node */
   treeType: string;
+
+  /** Internal item type classification */
   uCCFType: string;
 
+  /** Nutritional info per 100g */
   nutrients?: Nutrients;
 
+  /** Allergen info */
   allergens?: Allergens;
 }
 
 // Raw material with nutritional information
 export interface RawMaterial extends Item {
+  /** Nutritional info per 100g */
   nutrients: Nutrients;
 
+  /** Allergen info */
   allergens: Allergens;
 }
 
 export interface RawMaterialLine {
+  /** The raw material item */
   rawMaterial: RawMaterial;
 
   /** Quantity in kilograms (kg) */
