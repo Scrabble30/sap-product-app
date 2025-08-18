@@ -11,7 +11,7 @@ if (import.meta.main) {
 
   console.log(item);
 
-  const rawMaterials = await getRawMaterials(item.ItemCode);
+  const rawMaterials = await getRawMaterials(item);
 
   console.log("RawMaterials:", rawMaterials.length);
   console.log(rawMaterials);

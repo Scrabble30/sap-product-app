@@ -33,11 +33,11 @@ Deno.test(async function getItemTest() {
   const item = await getItem(itemCode);
 
   assertExists(item);
-  assertEquals(item.ItemCode, itemCode);
+  assertEquals(item.itemCode, itemCode);
 });
 
 Deno.test(async function getRawMaterialsTest() {
-  const itemCode = "0021050008";
+  const item = await getItem("0021050008");
 
   const expectedRawMaterials = [
     {
@@ -56,7 +56,7 @@ Deno.test(async function getRawMaterialsTest() {
     },
   ];
 
-  const actualRawMaterials = await getRawMaterials(itemCode);
+  const actualRawMaterials = await getRawMaterials(item);
 
   assertEquals(actualRawMaterials.length, expectedRawMaterials.length);
 
@@ -93,8 +93,8 @@ Deno.test(async function getRawMaterialsTest() {
 });
 
 Deno.test(async function getNutrientsTest() {
-  const itemCode = "0021050008";
-  const rawMaterials = await getRawMaterials(itemCode);
+  const item = await getItem("0021050008");
+  const rawMaterials = await getRawMaterials(item);
 
   const expectedNutritionalContent: Nutrients = {
     energyKj: 2132.1,
@@ -124,8 +124,8 @@ Deno.test(async function getNutrientsTest() {
 });
 
 Deno.test(async function getProductAllergensTest() {
-  const itemCode = "0021050008";
-  const rawMaterials = await getRawMaterials(itemCode);
+  const item = await getItem("0021050008");
+  const rawMaterials = await getRawMaterials(item);
 
   const expectedAllergens: Allergens = {
     glutenAllergen: AllergenStatus.FreeFrom,

@@ -175,18 +175,7 @@ export function isRawMaterial(item: Item): item is RawMaterial {
  *
  * @param itemCode Identifier of the item.
  */
-export function getItem(itemCode: string) {
-  return sapFetch(
-    `/Items('${itemCode}')?$select=ItemCode,ItemName,TreeType,U_CCF_Type`
-  );
-}
-
-/**
- * Retrieves a raw material.
- *
- * @param itemCode Identifier of the raw material (item).
- */
-export async function getItemWithNutrients(itemCode: string): Promise<Item> {
+export async function getItem(itemCode: string) {
   const fields = [
     "ItemCode",
     "ItemName",
@@ -279,11 +268,17 @@ export async function getItemWithNutrients(itemCode: string): Promise<Item> {
 /**
  * Traverse a product tree and collect raw materials.
  */
-export async function getRawMaterials(itemCode: string) {
+export async function getRawMaterials(item: Item) {
+  if (!["Færdigvare", "HF"].includes(item.uCCFType)) {
+    throw new Error(
+      "Item is not a finished product or a partial product. UFFCType: "
+    );
+  }
+
   const resultRawMaterials: RawMaterialLine[] = [];
 
   // Initial product tree for the top-level item
-  const rootTree = await getProductTree(itemCode);
+  const rootTree = await getProductTree(item.itemCode);
   const rootTreeLines = rootTree["ProductTreeLines"];
 
   // Put the root tree lines into the stack for processing
@@ -297,7 +292,7 @@ export async function getRawMaterials(itemCode: string) {
     if (!isValidItemCode(currentTreeLine.ItemCode)) continue;
 
     try {
-      const item = await getItemWithNutrients(currentTreeLine.ItemCode);
+      const item = await getItem(currentTreeLine.ItemCode);
 
       // If the item contains a product tree, push the tree lines to the stack
       if (item.treeType === "iProductionTree") {
