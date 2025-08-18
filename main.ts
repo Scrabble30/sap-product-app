@@ -2,6 +2,7 @@ import {
   calculateNutritionalContent,
   getItem,
   getProductAllergens,
+  getProductIngridientsDescriptionDa,
   getRawMaterials,
 } from "./sap-item-service.ts";
 
@@ -23,4 +24,9 @@ if (import.meta.main) {
   const allergens = getProductAllergens(rawMaterials);
 
   console.log("Allergens:", allergens);
+
+  const ingredientsDescriptionDa =
+    getProductIngridientsDescriptionDa(rawMaterials);
+
+  console.log(ingredientsDescriptionDa);
 }

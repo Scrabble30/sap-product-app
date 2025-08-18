@@ -117,6 +117,9 @@ export interface Item {
 
   /** Allergen info */
   allergens?: Allergens;
+
+  /** Danish ingredients description */
+  ingredientsDescriptionDa?: string;
 }
 
 // Raw material with nutritional information
@@ -126,6 +129,9 @@ export interface RawMaterial extends Item {
 
   /** Allergen info */
   allergens: Allergens;
+
+  /** Danish ingredients description */
+  ingredientsDescriptionDa: string;
 }
 
 export interface RawMaterialLine {
@@ -224,6 +230,8 @@ export async function getItem(itemCode: string) {
     "U_BOYX_Svovldioxid",
     "U_BOYX_Lupin",
     "U_BOYX_BL",
+    // Ingredients description
+    "U_CCF_Ingrediens_DA",
   ];
 
   const selectQuery = fields.join(",");
@@ -235,6 +243,7 @@ export async function getItem(itemCode: string) {
     itemName: data.ItemName,
     treeType: data.TreeType,
     uCCFType: data.U_CCF_Type,
+    ingredientsDescriptionDa: data.U_CCF_Ingrediens_DA,
   };
 
   if (item.uCCFType === "Råvare") {
@@ -424,4 +433,126 @@ export function getProductAllergens(
   }
 
   return resultAllergens;
+}
+
+export function getProductIngridientsDescriptionDa(
+  rawMaterials: RawMaterialLine[]
+): string {
+  // Total quantity of all raw materials (in kg)
+  const totalQuantity = rawMaterials.reduce(
+    (sum, rawMaterialLine) => rawMaterialLine.quantity + sum,
+    0
+  );
+
+  if (totalQuantity === 0) {
+    throw new Error("Total quantity of raw materials is zero.");
+  }
+
+  let hasDarkChocolate = false;
+  let hasMilkChocolate = false;
+
+  const ingredientsDescriptions = rawMaterials
+    .slice()
+    .sort((a, b) => b.quantity - a.quantity)
+    .map(({ rawMaterial, quantity }) => {
+      const description = rawMaterial.ingredientsDescriptionDa ?? "";
+      // TO-DO. Fix potential rounding error
+      const ratio = Math.round((quantity / totalQuantity) * 100);
+
+      const splitIndex = description.indexOf(" (");
+
+      let name: string;
+      let details: string;
+
+      if (splitIndex > 0) {
+        name = description.substring(0, splitIndex).trim();
+        details = description.substring(splitIndex).trim();
+      } else {
+        name = description.trim();
+        details = "";
+      }
+
+      const lowerDescription = description.toLowerCase();
+      if (!hasDarkChocolate && lowerDescription.includes("mørk chokolade")) {
+        hasDarkChocolate = true;
+      }
+      if (!hasMilkChocolate && lowerDescription.includes("mælke-chokolade")) {
+        hasMilkChocolate = true;
+      }
+
+      return `${name} (${ratio}%)${details ? " " + details : ""}`;
+    });
+
+  let resultIngredientsDescription = ingredientsDescriptions.join(", ");
+
+  if (hasDarkChocolate) {
+    resultIngredientsDescription += ". Mørk chokolade: Mindst 60% kakaotørstof";
+  }
+  if (hasMilkChocolate) {
+    resultIngredientsDescription += ". Mælkechokolade: Mindst 35% kakaotørstof";
+  }
+
+  const allergens = getProductAllergens(rawMaterials);
+  const allergenDescription = getProductAllergensDescriptionDa(allergens);
+  if (allergenDescription) {
+    resultIngredientsDescription += `. ${allergenDescription}`;
+  }
+
+  return resultIngredientsDescription;
+}
+
+export function getProductAllergensDescriptionDa(allergens: Allergens): string {
+  // Helper to check for MayContainTraces only
+  const isMayContainTraces = (status: AllergenStatus) =>
+    status === AllergenStatus.MayContainTraces;
+
+  const hasPeanuts = isMayContainTraces(allergens.peanutAllergen);
+
+  const otherNutAllergens = [
+    allergens.almondAllergen,
+    allergens.hazelnutAllergen,
+    allergens.walnutAllergen,
+    allergens.cashewAllergen,
+    allergens.pecanAllergen,
+    allergens.brazilNutAllergen,
+    allergens.pistachioAllergen,
+    allergens.macadamiaNutAllergen,
+  ];
+  const hasOtherNuts = otherNutAllergens.some(isMayContainTraces);
+
+  const otherAllergens = [
+    { name: "gluten", status: allergens.glutenAllergen },
+    { name: "krebsdyr", status: allergens.shellfishAllergen },
+    { name: "æg", status: allergens.eggAllergen },
+    { name: "fisk", status: allergens.fishAllergen },
+    { name: "soja", status: allergens.soyAllergen },
+    { name: "mælk", status: allergens.milkAllergen },
+    { name: "selleri", status: allergens.celeryAllergen },
+    { name: "sennep", status: allergens.mustardAllergen },
+    { name: "sesam", status: allergens.sesameSeedAllergen },
+    { name: "svovldioxid", status: allergens.sulphurDioxideAllergen },
+    { name: "lupin", status: allergens.lupinAllergen },
+    { name: "bløddyr", status: allergens.molluscAllergen },
+  ];
+
+  const hasOtherOtherAllergens = otherAllergens
+    .filter((otherAllergen) => isMayContainTraces(otherAllergen.status))
+    .map((otherAllergen) => otherAllergen.name);
+
+  const includedAllergens: string[] = [];
+
+  if (hasPeanuts) includedAllergens.push("peanuts");
+  if (hasOtherNuts) includedAllergens.push("nødder");
+  includedAllergens.push(...hasOtherOtherAllergens);
+
+  if (includedAllergens.length === 0) return "";
+
+  const lastIndex = includedAllergens.length - 1;
+  const allergenText = includedAllergens
+    .map((item, index) =>
+      index === 0 ? item : index === lastIndex ? "og " + item : item
+    )
+    .join(", ");
+
+  return `Kan indeholde spor af ${allergenText}`;
 }

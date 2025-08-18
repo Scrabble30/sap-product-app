@@ -6,6 +6,7 @@ import {
   calculateNutritionalContent,
   getItem,
   getProductAllergens,
+  getProductIngridientsDescriptionDa,
   getRawMaterials,
   isValidItemCode,
   Nutrients,
@@ -161,4 +162,19 @@ Deno.test(async function getProductAllergensTest() {
 
     assertEquals(actualAllergen, expectedAllergen);
   }
+});
+
+Deno.test(async function getProductIngridientsDescriptionDaTest() {
+  const item = await getItem("0021050008");
+  const rawMaterials = await getRawMaterials(item);
+
+  const expectedIngredientsDescriptionDa =
+    "marcipan (66%) (Valencia-MANDLER, sukker, vand, glukosesirup, rønnebærekstrakt), mørk chokolade (34%) (kakaomasse, sukker, kakaosmør, emulgator (SOJALECITIN)). Mørk chokolade: Mindst 60% kakaotørstof";
+  const actualIngredientsDescriptionDa =
+    getProductIngridientsDescriptionDa(rawMaterials);
+
+  assertEquals(
+    actualIngredientsDescriptionDa,
+    expectedIngredientsDescriptionDa
+  );
 });
