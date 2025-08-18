@@ -1,6 +1,77 @@
 import { getProductTree } from "./sap-product-tree-service.ts";
 import { sapFetch } from "./sap-service.ts";
 
+export enum AllergenStatus {
+  FreeFrom = 0,
+  MayContainTraces = 1,
+  InProduct = 2,
+}
+
+export interface Allergens {
+  /** Gluten allergen info */
+  glutenAllergen: AllergenStatus;
+
+  /** Shellfish allergen info */
+  shellfishAllergen: AllergenStatus;
+
+  /** Egg allergen info */
+  eggAllergen: AllergenStatus;
+
+  /** Fish allergen info */
+  fishAllergen: AllergenStatus;
+
+  /** Peanut allergen info */
+  peanutAllergen: AllergenStatus;
+
+  /** Soy allergen info */
+  soyAllergen: AllergenStatus;
+
+  /** Milk allergen info */
+  milkAllergen: AllergenStatus;
+
+  /** Almond allergen info */
+  almondAllergen: AllergenStatus;
+
+  /** Hazelnut allergen info */
+  hazelnutAllergen: AllergenStatus;
+
+  /** Walnut allergen info */
+  walnutAllergen: AllergenStatus;
+
+  /** Cashew allergen info */
+  cashewAllergen: AllergenStatus;
+
+  /** Pecan allergen info */
+  pecanAllergen: AllergenStatus;
+
+  /** Brazil nut allergen info */
+  brazilNutAllergen: AllergenStatus;
+
+  /** Pistachio allergen info */
+  pistachioAllergen: AllergenStatus;
+
+  /** Macadamia nut allergen info (Queensland nut) */
+  macadamiaNutAllergen: AllergenStatus;
+
+  /** Celery allergen info */
+  celeryAllergen: AllergenStatus;
+
+  /** Mustard allergen info */
+  mustardAllergen: AllergenStatus;
+
+  /** Sesame seed allergen info */
+  sesameSeedAllergen: AllergenStatus;
+
+  /** Sulphur dioxide allergen info */
+  sulphurDioxideAllergen: AllergenStatus;
+
+  /** Lupin allergen info */
+  lupinAllergen: AllergenStatus;
+
+  /** Mollusc allergen info */
+  molluscAllergen: AllergenStatus;
+}
+
 // Generic item interface
 export interface Item {
   itemCode: string;
@@ -31,6 +102,8 @@ export interface Item {
 
   /** Salt in grams (g) per 100g, if applicable */
   salt?: number;
+
+  allergens?: Allergens;
 }
 
 // Raw material with nutritional information
@@ -58,6 +131,8 @@ export interface RawMaterial extends Item {
 
   /** Salt in grams (g) per 100g */
   salt: number;
+
+  allergens: Allergens;
 }
 
 export interface RawMaterialLine {
@@ -74,6 +149,22 @@ function parseLocalizedNumber(value: string): number {
 
 function parseOptionalLocalizedNumber(value?: string): number | undefined {
   return value ? parseLocalizedNumber(value) : undefined;
+}
+
+function parseAllergenStatus(value?: string): AllergenStatus {
+  if (!value) {
+    throw new Error("Allergen status is missing or empty");
+  }
+  switch (value) {
+    case "Free from":
+      return AllergenStatus.FreeFrom;
+    case "May contain traces of":
+      return AllergenStatus.MayContainTraces;
+    case "In product":
+      return AllergenStatus.InProduct;
+    default:
+      throw new Error(`Unknown allergen status: ${value}`);
+  }
 }
 
 export function isValidItemCode(itemCode: string): boolean {
@@ -111,15 +202,54 @@ export function getItem(itemCode: string) {
  * @param itemCode Identifier of the raw material (item).
  */
 export async function getItemWithNutrients(itemCode: string): Promise<Item> {
-  const data = await sapFetch(
-    `/Items('${itemCode}')?$select=ItemCode,ItemName,TreeType,U_CCF_Type,U_BOYX_Energi,U_BOYX_Energik,U_BOYX_fedt,U_BOYX_fedtsyre,U_BOYX_Kulhydrat,U_BOYX_sukkerarter,U_BOYX_Protein,U_BOYX_salt`
-  );
+  const fields = [
+    "ItemCode",
+    "ItemName",
+    "TreeType",
+    "U_CCF_Type",
+    // Nutrients
+    "U_BOYX_Energi",
+    "U_BOYX_Energik",
+    "U_BOYX_fedt",
+    "U_BOYX_fedtsyre",
+    "U_BOYX_Kulhydrat",
+    "U_BOYX_sukkerarter",
+    "U_BOYX_Protein",
+    "U_BOYX_salt",
+    // Allergen fields
+    "U_BOYX_gluten",
+    "U_BOYX_Krebsdyr",
+    "U_BOYX_aag",
+    "U_BOYX_fisk",
+    "U_BOYX_JN",
+    "U_BOYX_soja",
+    "U_BOYX_ML",
+    "U_BOYX_mandel",
+    "U_BOYX_hassel",
+    "U_BOYX_val",
+    "U_BOYX_Cashe",
+    "U_BOYX_Pekan",
+    "U_BOYX_peka",
+    "U_BOYX_Pistacie",
+    "U_BOYX_Queensland",
+    "U_BOYX_Selleri",
+    "U_BOYX_Sennep",
+    "U_BOYX_Sesam",
+    "U_BOYX_Svovldioxid",
+    "U_BOYX_Lupin",
+    "U_BOYX_BL",
+  ];
 
-  return {
+  const selectQuery = fields.join(",");
+
+  const data = await sapFetch(`/Items('${itemCode}')?$select=${selectQuery}`);
+
+  const item: Item = {
     itemCode: data.ItemCode,
     itemName: data.ItemName,
     treeType: data.TreeType,
     uCCFType: data.U_CCF_Type,
+
     energyKj: parseOptionalLocalizedNumber(data.U_BOYX_Energi),
     energyKcal: parseOptionalLocalizedNumber(data.U_BOYX_Energik),
     fat: parseOptionalLocalizedNumber(data.U_BOYX_fedt),
@@ -129,6 +259,34 @@ export async function getItemWithNutrients(itemCode: string): Promise<Item> {
     protein: parseOptionalLocalizedNumber(data.U_BOYX_Protein),
     salt: parseOptionalLocalizedNumber(data.U_BOYX_salt),
   };
+
+  if (item.uCCFType === "Råvare") {
+    item.allergens = {
+      glutenAllergen: parseAllergenStatus(data.U_BOYX_gluten),
+      shellfishAllergen: parseAllergenStatus(data.U_BOYX_Krebsdyr),
+      eggAllergen: parseAllergenStatus(data.U_BOYX_aag),
+      fishAllergen: parseAllergenStatus(data.U_BOYX_fisk),
+      peanutAllergen: parseAllergenStatus(data.U_BOYX_JN),
+      soyAllergen: parseAllergenStatus(data.U_BOYX_soja),
+      milkAllergen: parseAllergenStatus(data.U_BOYX_ML),
+      almondAllergen: parseAllergenStatus(data.U_BOYX_mandel),
+      hazelnutAllergen: parseAllergenStatus(data.U_BOYX_hassel),
+      walnutAllergen: parseAllergenStatus(data.U_BOYX_val),
+      cashewAllergen: parseAllergenStatus(data.U_BOYX_Cashe),
+      pecanAllergen: parseAllergenStatus(data.U_BOYX_Pekan),
+      brazilNutAllergen: parseAllergenStatus(data.U_BOYX_peka),
+      pistachioAllergen: parseAllergenStatus(data.U_BOYX_Pistacie),
+      macadamiaNutAllergen: parseAllergenStatus(data.U_BOYX_Queensland),
+      celeryAllergen: parseAllergenStatus(data.U_BOYX_Selleri),
+      mustardAllergen: parseAllergenStatus(data.U_BOYX_Sennep),
+      sesameSeedAllergen: parseAllergenStatus(data.U_BOYX_Sesam),
+      sulphurDioxideAllergen: parseAllergenStatus(data.U_BOYX_Svovldioxid),
+      lupinAllergen: parseAllergenStatus(data.U_BOYX_Lupin),
+      molluscAllergen: parseAllergenStatus(data.U_BOYX_BL),
+    };
+  }
+
+  return item;
 }
 
 /**
@@ -224,4 +382,50 @@ export function calculateNutritionalContent(rawMaterials: RawMaterialLine[]) {
   }
 
   return resultNutrition;
+}
+
+function overrideIfHigher(
+  current: AllergenStatus,
+  candidate: AllergenStatus
+): AllergenStatus {
+  return candidate > current ? candidate : current;
+}
+
+export function getProductAllergens(
+  rawMaterials: RawMaterialLine[]
+): Allergens {
+  const resultAllergens: Allergens = {
+    glutenAllergen: AllergenStatus.FreeFrom,
+    shellfishAllergen: AllergenStatus.FreeFrom,
+    eggAllergen: AllergenStatus.FreeFrom,
+    fishAllergen: AllergenStatus.FreeFrom,
+    peanutAllergen: AllergenStatus.FreeFrom,
+    soyAllergen: AllergenStatus.FreeFrom,
+    milkAllergen: AllergenStatus.FreeFrom,
+    almondAllergen: AllergenStatus.FreeFrom,
+    hazelnutAllergen: AllergenStatus.FreeFrom,
+    walnutAllergen: AllergenStatus.FreeFrom,
+    cashewAllergen: AllergenStatus.FreeFrom,
+    pecanAllergen: AllergenStatus.FreeFrom,
+    brazilNutAllergen: AllergenStatus.FreeFrom,
+    pistachioAllergen: AllergenStatus.FreeFrom,
+    macadamiaNutAllergen: AllergenStatus.FreeFrom,
+    celeryAllergen: AllergenStatus.FreeFrom,
+    mustardAllergen: AllergenStatus.FreeFrom,
+    sesameSeedAllergen: AllergenStatus.FreeFrom,
+    sulphurDioxideAllergen: AllergenStatus.FreeFrom,
+    lupinAllergen: AllergenStatus.FreeFrom,
+    molluscAllergen: AllergenStatus.FreeFrom,
+  };
+
+  for (const { rawMaterial } of rawMaterials) {
+    for (const key in rawMaterial.allergens) {
+      const allergenKey = key as keyof Allergens;
+      const candidate = rawMaterial.allergens[allergenKey];
+      const current = resultAllergens[allergenKey];
+      resultAllergens[allergenKey] = overrideIfHigher(current, candidate);
+    }
+  }
+
+  return resultAllergens;
 }

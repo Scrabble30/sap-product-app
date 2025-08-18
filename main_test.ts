@@ -1,8 +1,11 @@
 import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
 import { login } from "./sap-auth.ts";
 import {
+  Allergens,
+  AllergenStatus,
   calculateNutritionalContent,
   getItem,
+  getProductAllergens,
   getRawMaterials,
   isValidItemCode,
 } from "./sap-item-service.ts";
@@ -116,5 +119,45 @@ Deno.test(async function getNutrientsTest() {
         `Value mismatch on ${key}: expected approx ${expected} ±${0.001}, got ${actual}`
       );
     }
+  }
+});
+
+Deno.test(async function getProductAllergensTest() {
+  const itemCode = "0021050008";
+  const rawMaterials = await getRawMaterials(itemCode);
+
+  const expectedAllergens: Allergens = {
+    glutenAllergen: AllergenStatus.FreeFrom,
+    shellfishAllergen: AllergenStatus.FreeFrom,
+    eggAllergen: AllergenStatus.FreeFrom,
+    fishAllergen: AllergenStatus.FreeFrom,
+    peanutAllergen: AllergenStatus.FreeFrom,
+    soyAllergen: AllergenStatus.InProduct,
+    milkAllergen: AllergenStatus.FreeFrom,
+    almondAllergen: AllergenStatus.InProduct,
+    hazelnutAllergen: AllergenStatus.FreeFrom,
+    walnutAllergen: AllergenStatus.FreeFrom,
+    cashewAllergen: AllergenStatus.FreeFrom,
+    pecanAllergen: AllergenStatus.FreeFrom,
+    brazilNutAllergen: AllergenStatus.FreeFrom,
+    pistachioAllergen: AllergenStatus.FreeFrom,
+    macadamiaNutAllergen: AllergenStatus.FreeFrom,
+    celeryAllergen: AllergenStatus.FreeFrom,
+    mustardAllergen: AllergenStatus.FreeFrom,
+    sesameSeedAllergen: AllergenStatus.FreeFrom,
+    sulphurDioxideAllergen: AllergenStatus.FreeFrom,
+    lupinAllergen: AllergenStatus.FreeFrom,
+    molluscAllergen: AllergenStatus.FreeFrom,
+  };
+
+  const actualAllergens = getProductAllergens(rawMaterials);
+
+  for (const key in expectedAllergens) {
+    const allergenKey = key as keyof Allergens;
+
+    const expectedAllergen = expectedAllergens[allergenKey];
+    const actualAllergen = actualAllergens[allergenKey];
+
+    assertEquals(actualAllergen, expectedAllergen);
   }
 });
