@@ -289,14 +289,17 @@ export async function getItem(itemCode: string) {
 /**
  * Traverse a product tree and collect raw materials.
  */
-export async function getRawMaterials(item: Item) {
+export async function getRawMaterials(item: Item): Promise<RawMaterialLine[]> {
   if (!["Færdigvare", "HF"].includes(item.uCCFType)) {
     throw new Error(
       "Item is not a finished product or a partial product. UFFCType: "
     );
   }
 
-  const resultRawMaterials: RawMaterialLine[] = [];
+  const rawMaterialMap = new Map<string, RawMaterialLine>();
+
+  const itemMap = new Map<string, Item>();
+  const productTreeMap = new Map();
 
   // Initial product tree for the top-level item
   const rootTree = await getProductTree(item.itemCode);
@@ -308,26 +311,43 @@ export async function getRawMaterials(item: Item) {
   while (stack.length > 0) {
     // Pop a tree line from the stack
     const currentTreeLine = stack.pop();
+    const itemCode = currentTreeLine.ItemCode;
 
     // Skip if item has no item code
-    if (!isValidItemCode(currentTreeLine.ItemCode)) continue;
+    if (!isValidItemCode(itemCode)) continue;
 
     try {
-      const item = await getItem(currentTreeLine.ItemCode);
+      let item: Item;
 
-      // If the item contains a product tree, push the tree lines to the stack
+      if (itemMap.has(itemCode)) {
+        item = itemMap.get(itemCode)!;
+      } else {
+        item = await getItem(itemCode);
+        itemMap.set(itemCode, item);
+      }
+
       if (item.treeType === "iProductionTree") {
-        const itemTree = await getProductTree(item.itemCode);
-        const itemTreeLines = itemTree["ProductTreeLines"];
+        let productTree;
 
-        stack.push(...itemTreeLines);
+        if (productTreeMap.has(itemCode)) {
+          productTree = productTreeMap.get(itemCode)!;
+        } else {
+          productTree = await getProductTree(itemCode);
+          productTreeMap.set(itemCode, productTree);
+        }
+
+        stack.push(...productTree["ProductTreeLines"]);
       }
 
       if (isRawMaterial(item)) {
-        resultRawMaterials.push({
-          rawMaterial: item,
-          quantity: currentTreeLine.Quantity,
-        });
+        if (rawMaterialMap.has(itemCode)) {
+          rawMaterialMap.get(itemCode)!.quantity += currentTreeLine.Quantity;
+        } else {
+          rawMaterialMap.set(itemCode, {
+            rawMaterial: item,
+            quantity: currentTreeLine.Quantity,
+          });
+        }
       }
     } catch (error) {
       console.error(
@@ -337,7 +357,7 @@ export async function getRawMaterials(item: Item) {
     }
   }
 
-  return resultRawMaterials;
+  return Array.from(rawMaterialMap.values());
 }
 
 /**
