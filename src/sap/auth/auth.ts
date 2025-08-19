@@ -1,4 +1,4 @@
-import { loadSapAuthConfig } from "./sap-auth-config.ts";
+import { loadSapAuthConfig } from "../config/auth-config.ts";
 import {
   createSession,
   saveSession,
@@ -46,12 +46,12 @@ export async function getValidSession(): Promise<Session> {
     return cachedSession;
   }
 
-  let session = await readSession("Session.json");
+  let session = await readSession("data/session.json");
 
   if (!session || isSessionExpired(session)) {
     session = await login();
 
-    await saveSession(session, "Session.json");
+    await saveSession(session, "data/session.json");
   }
 
   cachedSession = session;

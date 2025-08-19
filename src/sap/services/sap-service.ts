@@ -1,5 +1,5 @@
-import { loadSapAuthConfig } from "./sap-auth-config.ts";
-import { getValidSession } from "./sap-auth.ts";
+import { loadSapAuthConfig } from "../config/auth-config.ts";
+import { getValidSession } from "../auth/auth.ts";
 
 /**
  * Fetch from SAP Service Layer with session auth.
