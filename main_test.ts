@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
 import { login } from "./sap-auth.ts";
 import {
+  calculateNutritionalContent,
   getItem,
   getRawMaterials,
   isValidItemCode,
@@ -84,5 +85,36 @@ Deno.test(async function getRawMaterialsTest() {
       actualRawMaterialLine.quantity,
       expectedRawMaterialLine.quantity
     );
+  }
+});
+
+Deno.test(async function getNutrientsTest() {
+  const itemCode = "0021050008";
+  const rawMaterials = await getRawMaterials(itemCode);
+
+  const expectedNutritionalContent = {
+    energyKj: 2132.1,
+    energyKcal: 509.39,
+    fat: 34.78,
+    fattyAcid: 10.23,
+    carbohydrate: 35.37,
+    sugars: 31.82,
+    protein: 10.35,
+    salt: 0.02,
+  };
+
+  const actualNutritionalContent = calculateNutritionalContent(rawMaterials);
+
+  for (const key of Object.keys(
+    expectedNutritionalContent
+  ) as (keyof typeof expectedNutritionalContent)[]) {
+    const expected = expectedNutritionalContent[key];
+    const actual = Math.round(actualNutritionalContent[key] * 100) / 100;
+
+    if (Math.abs(expected - actual) > 0.001) {
+      throw new Error(
+        `Value mismatch on ${key}: expected approx ${expected} ±${0.001}, got ${actual}`
+      );
+    }
   }
 });
