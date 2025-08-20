@@ -106,4 +106,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,deno,windows,macos,linux
-Session.json
+data/session.json
