@@ -191,7 +191,12 @@ export async function getIngredients(item: Item): Promise<IngredientUsage[]> {
           productTreeMap.set(itemCode, productTree);
         }
 
-        stack.push(...productTree["ProductTreeLines"]);
+        for (const productTreeLine of productTree["ProductTreeLines"]) {
+          stack.push({
+            ...productTreeLine,
+            Quantity: currentTreeLine.Quantity * productTreeLine.Quantity,
+          });
+        }
       }
 
       // If the item is an ingredient, accumulate its usage
