@@ -4,6 +4,13 @@ import { Item } from "../../domain/item.ts";
 import { getProductTree } from "./product-tree-service.ts";
 import { sapFetch } from "./sap-service.ts";
 
+/**
+ * Parses a localized string-represented number to a float.
+ *
+ * @param value The string value to parse.
+ * @returns Parsed floating point number.
+ * @throws If the value is missing, empty, or not a valid number.
+ */
 function parseLocalizedNumber(value?: string): number {
   if (!value) {
     throw new Error("Numeric value is missing or empty");
@@ -18,6 +25,13 @@ function parseLocalizedNumber(value?: string): number {
   return parsed;
 }
 
+/**
+ * Converts a string value to an AllergenStatus enum value.
+ *
+ * @param value The string representation of allergen status.
+ * @returns Corresponding AllergenStatus enum.
+ * @throws If the value is missing or unknown.
+ */
 function parseAllergenStatus(value?: string): AllergenStatus {
   if (!value) {
     throw new Error("Allergen status is missing or empty");
@@ -34,6 +48,12 @@ function parseAllergenStatus(value?: string): AllergenStatus {
   }
 }
 
+/**
+ * Validates if the given item code string consists only of digits.
+ *
+ * @param itemCode The item code to validate.
+ * @returns True if valid numeric code.
+ */
 export function isValidItemCode(itemCode: string): boolean {
   return Boolean(itemCode) && /^\d+$/.test(itemCode);
 }
@@ -41,7 +61,8 @@ export function isValidItemCode(itemCode: string): boolean {
 /**
  * Retrieves a single item with selected fields.
  *
- * @param itemCode Identifier of the item.
+ * @param itemCode Identifier of the item to retrieve.
+ * @returns A promise resolving to the fetched Item object.
  */
 export async function getItem(itemCode: string): Promise<Item> {
   const fields = [
@@ -137,7 +158,11 @@ export async function getItem(itemCode: string): Promise<Item> {
 }
 
 /**
- * Traverse the product tree and collect leaf ingredients with usage quantities.
+ * Traverses the product tree of a finished or partial product item and collects all leaf ingredients with their usage quantities.
+ *
+ * @param item The starting product item. Must be a finished or partial product.
+ * @returns A promise resolving to an array of IngredientUsage objects representing all leaf ingredients and their quantities.
+ * @throws If the given item is not a finished or partial product.
  */
 export async function getIngredients(item: Item): Promise<IngredientUsage[]> {
   if (!["Færdigvare", "HF"].includes(item.uCCFType)) {
@@ -151,24 +176,25 @@ export async function getIngredients(item: Item): Promise<IngredientUsage[]> {
   const itemMap = new Map<string, Item>();
   const productTreeMap = new Map();
 
-  // Initial product tree for the top-level item
+  // Retrieve initial product tree for the top-level item.
   const rootTree = await getProductTree(item.itemCode);
   const rootTreeLines = rootTree["ProductTreeLines"];
 
-  // Put the root tree lines into the stack for processing
+  // Use stack to process all product tree lines.
   const stack = [...rootTreeLines];
 
   while (stack.length > 0) {
-    // Pop a tree line from the stack
+    // Pop the next tree line.
     const currentTreeLine = stack.pop();
     const itemCode = currentTreeLine.ItemCode;
 
-    // Skip if item has no item code
+    // Skip invalid item codes.
     if (!isValidItemCode(itemCode)) continue;
 
     try {
       let item: Item;
 
+      // Use cached item if available.
       if (itemMap.has(itemCode)) {
         item = itemMap.get(itemCode)!;
       } else {
@@ -176,7 +202,7 @@ export async function getIngredients(item: Item): Promise<IngredientUsage[]> {
         itemMap.set(itemCode, item);
       }
 
-      // If this item is itself an assembly, traverse its product tree
+      // If item is an assembly, traverse its sub-product tree.
       if (item.treeType === "iProductionTree") {
         let productTree;
 
@@ -195,7 +221,7 @@ export async function getIngredients(item: Item): Promise<IngredientUsage[]> {
         }
       }
 
-      // If the item is an ingredient, accumulate its usage
+      // If item is an ingredient, accumulate its quantity.
       if (isIngredient(item)) {
         if (ingredientMap.has(itemCode)) {
           ingredientMap.get(itemCode)!.quantity += currentTreeLine.Quantity;

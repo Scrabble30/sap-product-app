@@ -1,5 +1,8 @@
 import { IngredientUsage } from "./ingredient.ts";
 
+/**
+ * Represents nutritional values per 100g.
+ */
 export interface Nutrients {
   /** Energy in kilojoules (kJ) per 100g */
   energyKj: number;
@@ -30,8 +33,8 @@ export interface Nutrients {
  * Creates a complete Nutrients object with provided values,
  * defaulting all unspecified fields to zero.
  *
- * @param overrides - Partial fields to override
- * @returns Fully populated Nutrients object
+ * @param overrides Partial fields to override.
+ * @returns Fully populated Nutrients object.
  */
 export function createNutrients(overrides: Partial<Nutrients> = {}): Nutrients {
   // Initialize all nutrients to zero
@@ -50,10 +53,10 @@ export function createNutrients(overrides: Partial<Nutrients> = {}): Nutrients {
 }
 
 /**
- * Calculates the combined nutritional values per 100g based on given ingredients
- * and their quantities.
+ * Calculates the combined nutritional values per 100g
+ * based on given ingredients and their quantities.
  *
- * @param ingredients - List of ingredients with quantities in kg.
+ * @param ingredients List of ingredients with quantities in kg.
  * @returns Nutritional content per 100g based on the ingredients.
  * @throws If the total quantity is zero.
  */

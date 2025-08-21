@@ -2,8 +2,14 @@ import { loadSapAuthConfig } from "../config/auth-config.ts";
 import { getValidSession } from "../auth/auth.ts";
 
 /**
- * Fetch from SAP Service Layer with session auth.
- * Parses JSON (fallback to text) and throws parsed error on failure.
+ * Sends an authenticated HTTP request to the SAP Service Layer.
+ * Parses JSON response or falls back to text.
+ * Throws parsed error if the response is not successful.
+ *
+ * @param path SAP API endpoint path.
+ * @param opts Optional fetch options (method, headers, body, etc.).
+ * @returns A promise resolving to the parsed response data.
+ * @throws Parsed error data on failed response.
  */
 export async function sapFetch(path: string, opts: RequestInit = {}) {
   const config = loadSapAuthConfig();

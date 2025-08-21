@@ -1,7 +1,9 @@
 import { Allergens } from "./allergens.ts";
 import { Nutrients } from "./nutrition.ts";
 
-// Generic item interface
+/**
+ * Represents a generic item.
+ */
 export interface Item {
   /** Unique item identifier */
   itemCode: string;
@@ -15,12 +17,12 @@ export interface Item {
   /** Internal item type classification */
   uCCFType: string;
 
-  /** Nutritional info per 100g */
+  /** Nutritional info per 100g (optional) */
   nutrients?: Nutrients;
 
-  /** Allergen info */
+  /** Allergen info (optional) */
   allergens?: Allergens;
 
-  /** Danish ingredients description */
+  /** Danish ingredients description (optional) */
   ingredientsDescriptionDa?: string;
 }

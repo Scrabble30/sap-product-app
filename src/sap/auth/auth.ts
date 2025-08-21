@@ -10,7 +10,10 @@ import {
 let cachedSession: Session | null = null;
 
 /**
- * Log in to SAP Service Layer and create a new session object.
+ * Logs in to the SAP Service Layer and creates a new session object.
+ *
+ * @returns A promise resolving to the new session.
+ * @throws If the login request fails.
  */
 export async function login(): Promise<Session> {
   const sapAuthConfig = loadSapAuthConfig();
@@ -36,10 +39,11 @@ export async function login(): Promise<Session> {
 }
 
 /**
- * Get a valid SAP session:
- * - Returns cached session if valid
- * - Reads from file if available
- * - Logs in and saves session if expired or missing
+ * Retrieves a valid SAP session.
+ * Returns cached session if valid, reads from file if available,
+ * or logs in and saves session if expired or missing.
+ *
+ * @returns A promise resolving to a valid session.
  */
 export async function getValidSession(): Promise<Session> {
   if (cachedSession && !isSessionExpired(cachedSession)) {

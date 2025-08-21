@@ -1,9 +1,19 @@
 import { config } from "https://deno.land/x/dotenv/mod.ts";
 
+/**
+ * Configuration required to authenticate with SAP Service Layer.
+ */
 export type SapAuthConfig = {
+  /** SAP server base URL */
   serverUrl: string;
+
+  /** SAP company database name */
   companyDb: string;
+
+  /** SAP username */
   username: string;
+
+  /** SAP password */
   password: string;
 };
 
@@ -11,10 +21,11 @@ const env = config();
 let cachedConfig: SapAuthConfig | null = null;
 
 /**
- * Load and validate SAP auth configuration from environment variables.
- * Caches the result after the first call.
+ * Loads and validates SAP authentication configuration from environment variables.
+ * Caches the result after the first successful load.
  *
- * @throws If any required environment variable is missing.
+ * @returns The loaded SAP authentication configuration.
+ * @throws If any required SAP environment variables are missing.
  */
 export function loadSapAuthConfig(): SapAuthConfig {
   if (cachedConfig) return cachedConfig;

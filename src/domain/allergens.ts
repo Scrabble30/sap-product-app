@@ -1,11 +1,22 @@
 import { IngredientUsage } from "./ingredient.ts";
 
+/**
+ * Status levels representing the presence of an allergen in a product.
+ */
 export enum AllergenStatus {
+  /** Allergen is absent. */
   FreeFrom = 0,
+
+  /** Allergen may be present as traces. */
   MayContainTraces = 1,
+
+  /** Allergen is present in the product. */
   InProduct = 2,
 }
 
+/**
+ * Represents allergen statuses for common allergens in a product.
+ */
 export interface Allergens {
   /** Gluten allergen info */
   gluten: AllergenStatus;
@@ -109,6 +120,13 @@ export function createAllergens(
   return { ...base, ...overrides };
 }
 
+/**
+ * Returns the higher allergen status between current and candidate.
+ *
+ * @param current Current allergen status.
+ * @param candidate Candidate allergen status to compare.
+ * @returns The higher of the two statuses, or current if they are equal.
+ */
 export function overrideIfHigher(
   current: AllergenStatus,
   candidate: AllergenStatus
@@ -116,6 +134,12 @@ export function overrideIfHigher(
   return candidate > current ? candidate : current;
 }
 
+/**
+ * Aggregates allergens from a list of ingredient usages by inspecting the allergens of each ingredient.
+ *
+ * @param ingredients List of ingredient usages whose ingredients contain allergen info.
+ * @returns Aggregated allergens representing the combined allergen status of all ingredients.
+ */
 export function aggregateAllergens(ingredients: IngredientUsage[]): Allergens {
   const resultAllergens: Allergens = createAllergens();
 
@@ -133,6 +157,12 @@ export function aggregateAllergens(ingredients: IngredientUsage[]): Allergens {
   return resultAllergens;
 }
 
+/**
+ * Builds a Danish allergens description string based on allergen statuses.
+ *
+ * @param allergens The aggregated allergens object.
+ * @returns Localized description of potential allergen traces.
+ */
 export function buildAllergensDescriptionDa(allergens: Allergens): string {
   // Helper to check for MayContainTraces only
   const isMayContainTraces = (status: AllergenStatus) =>

@@ -6,7 +6,9 @@ import {
 } from "./allergens.ts";
 import { Nutrients } from "./nutrition.ts";
 
-// Ingredient nutritional and allergens information
+/**
+ * Represents an ingredient extending Item with nutritional and allergen info.
+ */
 export interface Ingredient extends Item {
   /** Nutritional info per 100g */
   nutrients: Nutrients;
@@ -18,6 +20,9 @@ export interface Ingredient extends Item {
   ingredientsDescriptionDa: string;
 }
 
+/**
+ * Represents usage of an ingredient with a specific quantity.
+ */
 export interface IngredientUsage {
   /** The ingredient */
   ingredient: Ingredient;
@@ -26,6 +31,12 @@ export interface IngredientUsage {
   quantity: number;
 }
 
+/**
+ * Type guard to check if an Item is an Ingredient with nutrients and allergens info.
+ *
+ * @param item The item to check.
+ * @returns True if the item is an Ingredient.
+ */
 export function isIngredient(item: Item): item is Ingredient {
   return (
     item.uCCFType === "Råvare" &&
@@ -34,6 +45,14 @@ export function isIngredient(item: Item): item is Ingredient {
   );
 }
 
+/**
+ * Builds a Danish description string for given ingredient usages,
+ * including percentages and allergen info.
+ *
+ * @param ingredients List of ingredient usages.
+ * @returns Localized Danish description string summarizing ingredients and potential allergens.
+ * @throws If total quantity is zero.
+ */
 export function buildIngridientsDescriptionDa(
   ingredients: IngredientUsage[]
 ): string {
