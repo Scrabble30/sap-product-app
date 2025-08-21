@@ -4,19 +4,15 @@ import { Item } from "../../domain/item.ts";
 import { getProductTree } from "./product-tree-service.ts";
 import { sapFetch } from "./sap-service.ts";
 
-function parseLocalizedNumber(value?: string, fieldName?: string): number {
+function parseLocalizedNumber(value?: string): number {
   if (!value) {
-    throw new Error(
-      `Numeric value${fieldName ? ` for ${fieldName}` : ""} is missing or empty`
-    );
+    throw new Error("Numeric value is missing or empty");
   }
 
   const parsed = parseFloat(value.replace(",", "."));
 
   if (isNaN(parsed)) {
-    throw new Error(
-      `Invalid numeric value${fieldName ? ` for ${fieldName}` : ""}: ${value}`
-    );
+    throw new Error(`Invalid numeric value: ${value}`);
   }
 
   return parsed;
