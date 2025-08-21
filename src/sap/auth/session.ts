@@ -12,7 +12,10 @@ export function createSession(id: string, timeoutMinutes: number): Session {
   };
 }
 
-export async function saveSession(session: Session, filename: string) {
+export async function saveSession(
+  session: Session,
+  filename: string
+): Promise<void> {
   await Deno.writeTextFile(filename, JSON.stringify(session, null, 2));
 }
 
