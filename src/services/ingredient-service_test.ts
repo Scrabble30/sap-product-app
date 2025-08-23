@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { ItemService } from "../src/sap/services/item-service.ts";
-import { IngredientService } from "../src/services/ingredient-service.ts";
+import { ItemService } from "../sap/services/item-service.ts";
+import { IngredientService } from "./ingredient-service.ts";
 
 Deno.test(async function buildIngridientsDescriptionDaTest() {
   const item = await ItemService.getItem("0021050008");

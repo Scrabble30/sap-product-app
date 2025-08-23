@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert/equals";
-import { Nutrients } from "../src/models/nutrients.ts";
-import { ItemService } from "../src/sap/services/item-service.ts";
-import { NutrientsService } from "../src/services/nutrients-service.ts";
+import { Nutrients } from "../models/nutrients.ts";
+import { ItemService } from "../sap/services/item-service.ts";
+import { NutrientsService } from "./nutrients-service.ts";
 
 Deno.test(async function getNutrientsTest() {
   const item = await ItemService.getItem("0021050008");

@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
-import { ItemService } from "../src/sap/services/item-service.ts";
+import { ItemService } from "../../src/sap/services/item-service.ts";
 
 Deno.test(function isValidItemCode_Valid_ItemCode_Test() {
   const validItemCode = ItemService.isValidItemCode("0021050008");

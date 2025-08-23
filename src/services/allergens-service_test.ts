@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
-import { Allergens, AllergenStatus } from "../src/models/allergens.ts";
-import { AllergensService } from "../src/services/allergens-service.ts";
-import { ItemService } from "../src/sap/services/item-service.ts";
+import { Allergens, AllergenStatus } from "../models/allergens.ts";
+import { AllergensService } from "./allergens-service.ts";
+import { ItemService } from "../sap/services/item-service.ts";
 
 Deno.test(async function aggregateAllergensTest() {
   const item = await ItemService.getItem("0021050008");
