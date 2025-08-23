@@ -1,10 +1,13 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { ItemService } from "../../src/sap/services/item-service.ts";
-import { setupTestData, teardownTestData } from "../fixtures/setup.ts";
 import { testItems } from "../fixtures/test_data.ts";
+import {
+  setupItemTestData,
+  teardownItemTestData,
+} from "../fixtures/sap-setup.ts";
 
 Deno.test(async function getItemTest() {
-  await setupTestData();
+  await setupItemTestData();
 
   try {
     const expected = testItems["test_0000001111_test"];
@@ -13,6 +16,6 @@ Deno.test(async function getItemTest() {
     assertExists(actual);
     assertEquals(actual, expected);
   } finally {
-    await teardownTestData();
+    await teardownItemTestData();
   }
 });
