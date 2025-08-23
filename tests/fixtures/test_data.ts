@@ -2,6 +2,7 @@ import { AllergenStatus } from "../../src/models/allergens.ts";
 import { Item } from "../../src/models/item.ts";
 import { NutrientsService } from "../../src/services/nutrients-service.ts";
 import { AllergensService } from "../../src/services/allergens-service.ts";
+import { ProductTree } from "../../src/models/ProductTree.ts";
 
 export const testItems: Record<string, Item> = {
   test_0000001000_test: {
@@ -73,5 +74,40 @@ export const testItems: Record<string, Item> = {
     }),
     ingredientsDescriptionDa:
       "marcipan (60%) (Valencia-MANDLER, sukker, vand, glukosesirup, rønnebærekstrakt), mørk chokolade (40%) (kakaomasse, sukker, kakaosmør, emulgator (SOJALECITIN)). Mørk chokolade: Mindst 60% kakaotørstof.",
+  },
+};
+
+export const testProductTrees: Record<string, ProductTree> = {
+  test_0000001110_test: {
+    treeCode: "test_0000001110_test",
+    treeType: "iProductionTree",
+    productDescription: "HF Bar, Marcipan Chokoladebar",
+    productTreeLines: [
+      {
+        itemCode: "test_0000001000_test",
+        itemName: "Mørk chokolade",
+        itemType: "pit_Item",
+        quantity: 0.0208,
+      },
+      {
+        itemCode: "test_0000001100_test",
+        itemName: "Marcipan",
+        itemType: "pit_Item",
+        quantity: 0.0312,
+      },
+    ],
+  },
+  test_0000001111_test: {
+    treeCode: "test_0000001111_test",
+    treeType: "iProductionTree",
+    productDescription: "Marcipan Chokoladebar",
+    productTreeLines: [
+      {
+        itemCode: "test_0000001110_test",
+        itemName: "HF Bar, Marcipan Chokoladebar",
+        itemType: "pit_Item",
+        quantity: 1,
+      },
+    ],
   },
 };
