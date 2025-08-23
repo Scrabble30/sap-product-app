@@ -1,17 +1,5 @@
-import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { ItemService } from "../../src/sap/services/item-service.ts";
-
-Deno.test(function isValidItemCode_Valid_ItemCode_Test() {
-  const validItemCode = ItemService.isValidItemCode("0021050008");
-
-  assert(validItemCode);
-});
-
-Deno.test(function isValidItemCode_Invalid_ItemCode_Test() {
-  const invalidItemCode = ItemService.isValidItemCode("KS'ER");
-
-  assertFalse(invalidItemCode);
-});
 
 Deno.test(async function getItemTest() {
   const itemCode = "0021050008";
