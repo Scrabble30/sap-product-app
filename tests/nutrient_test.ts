@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert/equals";
-import { calculateNutrition, Nutrients } from "../src/domain/nutrition.ts";
+import { Nutrients } from "../src/models/nutrients.ts";
 import { ItemService } from "../src/sap/services/item-service.ts";
+import { NutrientsService } from "../src/services/nutrients-service.ts";
 
 Deno.test(async function getNutrientsTest() {
   const item = await ItemService.getItem("0021050008");
@@ -17,7 +18,7 @@ Deno.test(async function getNutrientsTest() {
     salt: 0.02,
   };
 
-  const actualNutrients = calculateNutrition(ingredients);
+  const actualNutrients = NutrientsService.calculateNutrition(ingredients);
 
   for (const key in expectedNutrients) {
     const nutrientKey = key as keyof Nutrients;

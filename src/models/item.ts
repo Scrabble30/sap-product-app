@@ -1,5 +1,5 @@
 import { Allergens } from "./allergens.ts";
-import { Nutrients } from "./nutrition.ts";
+import { Nutrients } from "./nutrients.ts";
 
 /**
  * Represents a generic item.

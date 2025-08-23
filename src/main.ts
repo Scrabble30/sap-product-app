@@ -1,7 +1,7 @@
-import { aggregateAllergens } from "./domain/allergens.ts";
-import { buildIngridientsDescriptionDa } from "./domain/ingredient.ts";
-import { calculateNutrition } from "./domain/nutrition.ts";
+import { AllergensService } from "./services/allergens-service.ts";
+import { IngredientService } from "./services/ingredient-service.ts";
 import { ItemService } from "./sap/services/item-service.ts";
+import { NutrientsService } from "./services/nutrients-service.ts";
 
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
@@ -14,15 +14,16 @@ if (import.meta.main) {
   console.log("Ingredients:", ingredients.length);
   console.log(ingredients);
 
-  const nutritionalContent = calculateNutrition(ingredients);
+  const nutritionalContent = NutrientsService.calculateNutrition(ingredients);
 
   console.log("NutritionalContent:", nutritionalContent);
 
-  const allergens = aggregateAllergens(ingredients);
+  const allergens = AllergensService.aggregateAllergens(ingredients);
 
   console.log("Allergens:", allergens);
 
-  const ingredientsDescriptionDa = buildIngridientsDescriptionDa(ingredients);
+  const ingredientsDescriptionDa =
+    IngredientService.buildIngridientsDescriptionDa(ingredients);
 
   console.log(ingredientsDescriptionDa);
 }

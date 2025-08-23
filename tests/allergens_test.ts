@@ -1,9 +1,6 @@
 import { assertEquals } from "@std/assert";
-import {
-  aggregateAllergens,
-  Allergens,
-  AllergenStatus,
-} from "../src/domain/allergens.ts";
+import { Allergens, AllergenStatus } from "../src/models/allergens.ts";
+import { AllergensService } from "../src/services/allergens-service.ts";
 import { ItemService } from "../src/sap/services/item-service.ts";
 
 Deno.test(async function aggregateAllergensTest() {
@@ -34,7 +31,7 @@ Deno.test(async function aggregateAllergensTest() {
     mollusc: AllergenStatus.FreeFrom,
   };
 
-  const actualAllergens = aggregateAllergens(ingredients);
+  const actualAllergens = AllergensService.aggregateAllergens(ingredients);
 
   for (const key in expectedAllergens) {
     const allergenKey = key as keyof Allergens;

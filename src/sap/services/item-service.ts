@@ -1,8 +1,9 @@
-import { IngredientUsage, isIngredient } from "../../domain/ingredient.ts";
-import { AllergenStatus } from "../../domain/allergens.ts";
-import { Item } from "../../domain/item.ts";
+import { IngredientUsage } from "../../models/ingredient.ts";
+import { AllergenStatus } from "../../models/allergens.ts";
+import { Item } from "../../models/item.ts";
 import { ProductTreeService } from "./product-tree-service.ts";
 import { SapService } from "./sap-service.ts";
+import { IngredientService } from "../../services/ingredient-service.ts";
 
 export class ItemService {
   /**
@@ -226,7 +227,7 @@ export class ItemService {
         }
 
         // If item is an ingredient, accumulate its quantity.
-        if (isIngredient(item)) {
+        if (IngredientService.isIngredient(item)) {
           if (ingredientMap.has(itemCode)) {
             ingredientMap.get(itemCode)!.quantity += currentTreeLine.Quantity;
           } else {
