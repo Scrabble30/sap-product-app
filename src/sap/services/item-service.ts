@@ -5,6 +5,7 @@ import { SapService } from "./sap-service.ts";
 import { IngredientService } from "../../services/ingredient-service.ts";
 import { SapItemData } from "../models/sap-item-data.ts";
 import { mapSapItemDataToItem } from "../mapper/sap-item-mapper.ts";
+import { ProductTree } from "../../models/ProductTree.ts";
 
 export class ItemService {
   /**
@@ -90,11 +91,11 @@ export class ItemService {
     const ingredientMap = new Map<string, IngredientUsage>();
 
     const itemMap = new Map<string, Item>();
-    const productTreeMap = new Map();
+    const productTreeMap = new Map<string, ProductTree>();
 
     // Retrieve initial product tree for the top-level item.
     const rootTree = await ProductTreeService.getProductTree(item.itemCode);
-    const rootTreeLines = rootTree["ProductTreeLines"];
+    const rootTreeLines = rootTree.productTreeLines;
 
     // Use stack to process all product tree lines.
     const stack = [...rootTreeLines];
@@ -102,7 +103,10 @@ export class ItemService {
     while (stack.length > 0) {
       // Pop the next tree line.
       const currentTreeLine = stack.pop();
-      const itemCode = currentTreeLine.ItemCode;
+
+      if (!currentTreeLine) continue;
+
+      const itemCode = currentTreeLine.itemCode;
 
       // Skip invalid item codes.
       if (!this.isValidItemCode(itemCode)) continue;
@@ -129,10 +133,10 @@ export class ItemService {
             productTreeMap.set(itemCode, productTree);
           }
 
-          for (const productTreeLine of productTree["ProductTreeLines"]) {
+          for (const productTreeLine of productTree.productTreeLines) {
             stack.push({
               ...productTreeLine,
-              Quantity: currentTreeLine.Quantity * productTreeLine.Quantity,
+              quantity: currentTreeLine.quantity * productTreeLine.quantity,
             });
           }
         }
@@ -140,17 +144,17 @@ export class ItemService {
         // If item is an ingredient, accumulate its quantity.
         if (IngredientService.isIngredient(item)) {
           if (ingredientMap.has(itemCode)) {
-            ingredientMap.get(itemCode)!.quantity += currentTreeLine.Quantity;
+            ingredientMap.get(itemCode)!.quantity += currentTreeLine.quantity;
           } else {
             ingredientMap.set(itemCode, {
               ingredient: item,
-              quantity: currentTreeLine.Quantity,
+              quantity: currentTreeLine.quantity,
             });
           }
         }
       } catch (error) {
         console.error(
-          `Failed to fetch item (${currentTreeLine.ItemCode})`,
+          `Failed to fetch item (${currentTreeLine.itemCode})`,
           error
         );
       }
