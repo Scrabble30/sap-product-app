@@ -1,32 +1,28 @@
 import { assert, assertEquals, assertExists, assertFalse } from "@std/assert";
-import {
-  getIngredients,
-  getItem,
-  isValidItemCode,
-} from "../src/sap/services/item-service.ts";
+import { ItemService } from "../src/sap/services/item-service.ts";
 
 Deno.test(function isValidItemCode_Valid_ItemCode_Test() {
-  const validItemCode = isValidItemCode("0021050008");
+  const validItemCode = ItemService.isValidItemCode("0021050008");
 
   assert(validItemCode);
 });
 
 Deno.test(function isValidItemCode_Invalid_ItemCode_Test() {
-  const invalidItemCode = isValidItemCode("KS'ER");
+  const invalidItemCode = ItemService.isValidItemCode("KS'ER");
 
   assertFalse(invalidItemCode);
 });
 
 Deno.test(async function getItemTest() {
   const itemCode = "0021050008";
-  const item = await getItem(itemCode);
+  const item = await ItemService.getItem(itemCode);
 
   assertExists(item);
   assertEquals(item.itemCode, itemCode);
 });
 
 Deno.test(async function getIngredientsTest() {
-  const item = await getItem("0021050008");
+  const item = await ItemService.getItem("0021050008");
 
   const expectedIngredients = [
     {
@@ -45,7 +41,7 @@ Deno.test(async function getIngredientsTest() {
     },
   ];
 
-  const actualIngredients = await getIngredients(item);
+  const actualIngredients = await ItemService.getIngredients(item);
 
   assertEquals(actualIngredients.length, expectedIngredients.length);
 
@@ -79,7 +75,7 @@ Deno.test(async function getIngredientsTest() {
 });
 
 Deno.test(async function getIngredientsTest2() {
-  const item = await getItem("0021031111");
+  const item = await ItemService.getItem("0021031111");
 
   const expectedIngredients = [
     // Dark Marci
@@ -129,7 +125,7 @@ Deno.test(async function getIngredientsTest2() {
     },
   ];
 
-  const actualIngredients = await getIngredients(item);
+  const actualIngredients = await ItemService.getIngredients(item);
 
   assertEquals(
     actualIngredients.length,
@@ -159,7 +155,7 @@ Deno.test(async function getIngredientsTest2() {
 });
 
 Deno.test(async function getIngredientsTest3() {
-  const item = await getItem("0022030025-2");
+  const item = await ItemService.getItem("0022030025-2");
 
   const expectedIngredients = [
     {
@@ -388,8 +384,8 @@ Deno.test(async function getIngredientsTest3() {
     },
   ].sort((a, b) => a.ingredient.itemName.localeCompare(b.ingredient.itemName));
 
-  const actualIngredients = (await getIngredients(item)).sort((a, b) =>
-    a.ingredient.itemName.localeCompare(b.ingredient.itemName)
+  const actualIngredients = (await ItemService.getIngredients(item)).sort(
+    (a, b) => a.ingredient.itemName.localeCompare(b.ingredient.itemName)
   );
 
   assertEquals(
