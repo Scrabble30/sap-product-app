@@ -1,14 +1,41 @@
-import { assert, assertFalse } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
+import { Stub, stub } from "jsr:@std/testing/mock";
+import {
+  testIngredientUsages,
+  testItems,
+  testProductTrees,
+} from "../../../tests/fixtures/test_data.ts";
+import { sortIngredientUsagesByItemCode } from "../../../tests/utils/test_helper.ts";
+import { IngredientUsage } from "../../models/ingredient.ts";
 import { ItemService } from "./item-service.ts";
+import { ProductTreeService } from "./product-tree-service.ts";
 
-Deno.test(function isValidItemCode_Valid_ItemCode_Test() {
-  const validItemCode = ItemService.isValidItemCode("0021050008");
+Deno.test(async function getIngredientsTest() {
+  const getItemStub: Stub<typeof ItemService> = stub(
+    ItemService,
+    "getItem",
+    (itemCode) => Promise.resolve(testItems[itemCode])
+  );
 
-  assert(validItemCode);
-});
+  const getProductTreeStub: Stub<typeof ProductTreeService> = stub(
+    ProductTreeService,
+    "getProductTree",
+    (treeCode) => Promise.resolve(testProductTrees[treeCode])
+  );
 
-Deno.test(function isValidItemCode_Invalid_ItemCode_Test() {
-  const invalidItemCode = ItemService.isValidItemCode("KS'ER");
+  try {
+    const item = await ItemService.getItem("test_0000001111_test");
+    const expected: IngredientUsage[] = testIngredientUsages[item.itemCode];
 
-  assertFalse(invalidItemCode);
+    const actual = await ItemService.getIngredients(item);
+
+    assertExists(actual);
+    assertEquals(
+      sortIngredientUsagesByItemCode(actual),
+      sortIngredientUsagesByItemCode(expected)
+    );
+  } finally {
+    getItemStub.restore();
+    getProductTreeStub.restore();
+  }
 });
