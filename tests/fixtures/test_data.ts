@@ -3,6 +3,7 @@ import { Item } from "../../src/models/item.ts";
 import { NutrientsService } from "../../src/services/nutrients-service.ts";
 import { AllergensService } from "../../src/services/allergens-service.ts";
 import { ProductTree } from "../../src/models/ProductTree.ts";
+import { Ingredient, IngredientUsage } from "../../src/models/ingredient.ts";
 
 export const testItems: Record<string, Item> = {
   test_0000001000_test: {
@@ -110,4 +111,32 @@ export const testProductTrees: Record<string, ProductTree> = {
       },
     ],
   },
+};
+
+export const testIngredients: Record<string, Ingredient> = {
+  test_0000001000_test: testItems["test_0000001000_test"] as Ingredient,
+  test_0000001100_test: testItems["test_0000001100_test"] as Ingredient,
+};
+
+export const testIngredientUsages: Record<string, IngredientUsage[]> = {
+  test_0000001110_test: [
+    {
+      ingredient: testIngredients["test_0000001000_test"],
+      quantity: 0.0208,
+    },
+    {
+      ingredient: testIngredients["test_0000001100_test"],
+      quantity: 0.0312,
+    },
+  ],
+  test_0000001111_test: [
+    {
+      ingredient: testIngredients["test_0000001000_test"],
+      quantity: 1 * 0.0208,
+    },
+    {
+      ingredient: testIngredients["test_0000001100_test"],
+      quantity: 1 * 0.0312,
+    },
+  ],
 };
