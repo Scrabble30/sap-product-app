@@ -2,6 +2,34 @@ import { Allergens, AllergenStatus } from "../models/allergens.ts";
 import { IngredientUsage } from "../models/ingredient.ts";
 
 export class AllergensService {
+  /** Converts enum to SAP string */
+  static allergenStatusToString(status: AllergenStatus): string | undefined {
+    switch (status) {
+      case AllergenStatus.FreeFrom:
+        return "Free from";
+      case AllergenStatus.MayContainTraces:
+        return "May contain traces of";
+      case AllergenStatus.InProduct:
+        return "In product";
+      default:
+        return undefined;
+    }
+  }
+
+  /** Converts valid SAP string to enum. Returns undefined if no match. */
+  static stringToAllergenStatus(str: string): AllergenStatus | undefined {
+    switch (str?.trim()) {
+      case "Free from":
+        return AllergenStatus.FreeFrom;
+      case "May contain traces of":
+        return AllergenStatus.MayContainTraces;
+      case "In product":
+        return AllergenStatus.InProduct;
+      default:
+        return undefined;
+    }
+  }
+
   /**
    * Create a new Allergens object.
    * Any unspecified allergens default to AllergenStatus.FreeFrom.
