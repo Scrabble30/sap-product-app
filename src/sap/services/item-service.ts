@@ -9,16 +9,6 @@ import { ProductTree } from "../../models/ProductTree.ts";
 
 export class ItemService {
   /**
-   * Validates if the given item code string consists only of digits.
-   *
-   * @param itemCode The item code to validate.
-   * @returns True if valid numeric code.
-   */
-  static isValidItemCode(itemCode: string): boolean {
-    return Boolean(itemCode) && /^\d+$/.test(itemCode);
-  }
-
-  /**
    * Retrieves a single item with selected fields.
    *
    * @param itemCode Identifier of the item to retrieve.
@@ -68,7 +58,7 @@ export class ItemService {
     const selectQuery = fields.join(",");
 
     const data: SapItemData = await SapService.sapFetch(
-      `/Items('${itemCode}')?$select=${selectQuery}`
+      `/Items('${itemCode.replace(/'/g, "''")}')?$select=${selectQuery}`
     );
 
     return mapSapItemDataToItem(data);
@@ -109,7 +99,7 @@ export class ItemService {
       const itemCode = currentTreeLine.itemCode;
 
       // Skip invalid item codes.
-      if (!this.isValidItemCode(itemCode)) continue;
+      if (!itemCode) continue;
 
       try {
         let item: Item;
