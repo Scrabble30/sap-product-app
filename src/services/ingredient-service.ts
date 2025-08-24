@@ -74,13 +74,17 @@ export class IngredientService {
 
     let resultIngredientsDescription = ingredientsDescriptions.join(", ");
 
+    if (resultIngredientsDescription) {
+      resultIngredientsDescription += ".";
+    }
+
     if (hasDarkChocolate) {
       resultIngredientsDescription +=
-        ". Mørk chokolade: Mindst 60% kakaotørstof";
+        " Mørk chokolade: Mindst 60% kakaotørstof.";
     }
     if (hasMilkChocolate) {
       resultIngredientsDescription +=
-        ". Mælkechokolade: Mindst 35% kakaotørstof";
+        " Mælkechokolade: Mindst 35% kakaotørstof.";
     }
 
     const productAllergens = AllergensService.aggregateAllergens(ingredients);
