@@ -23,6 +23,23 @@ Deno.test(async function getItemTest() {
   }
 });
 
+Deno.test(async function getItemTest2() {
+  try {
+    await ItemService.getItem("KS'er");
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error != null &&
+      "error" in error &&
+      typeof error["error"] === "object" &&
+      error["error"] != null &&
+      "code" in error["error"]
+    ) {
+      assertEquals(error["error"]["code"], -2028);
+    }
+  }
+});
+
 Deno.test(async function getProductTreeTest() {
   await setupItemTestData();
   await setupProductTreeTestData();
