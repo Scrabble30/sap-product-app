@@ -1,44 +1,34 @@
 import { assertEquals } from "@std/assert";
-import { Allergens, AllergenStatus } from "../models/allergens.ts";
+import { Stub, stub } from "jsr:@std/testing/mock";
+import { testItems, testProductTrees } from "../../tests/fixtures/test_data.ts";
+import { Allergens } from "../models/allergens.ts";
 import { AllergensService } from "./allergens-service.ts";
 import { ItemService } from "../sap/services/item-service.ts";
+import { ProductTreeService } from "../sap/services/product-tree-service.ts";
 
 Deno.test(async function aggregateAllergensTest() {
-  const item = await ItemService.getItem("0021050008");
-  const ingredients = await ItemService.getIngredients(item);
+  const getItemStub: Stub<typeof ItemService> = stub(
+    ItemService,
+    "getItem",
+    (itemCode) => Promise.resolve(testItems[itemCode])
+  );
 
-  const expectedAllergens: Allergens = {
-    gluten: AllergenStatus.FreeFrom,
-    shellfish: AllergenStatus.FreeFrom,
-    egg: AllergenStatus.FreeFrom,
-    fish: AllergenStatus.FreeFrom,
-    peanut: AllergenStatus.FreeFrom,
-    soy: AllergenStatus.InProduct,
-    milk: AllergenStatus.FreeFrom,
-    almond: AllergenStatus.InProduct,
-    hazelnut: AllergenStatus.FreeFrom,
-    walnut: AllergenStatus.FreeFrom,
-    cashew: AllergenStatus.FreeFrom,
-    pecan: AllergenStatus.FreeFrom,
-    brazilNut: AllergenStatus.FreeFrom,
-    pistachio: AllergenStatus.FreeFrom,
-    macadamiaNut: AllergenStatus.FreeFrom,
-    celery: AllergenStatus.FreeFrom,
-    mustard: AllergenStatus.FreeFrom,
-    sesameSeed: AllergenStatus.FreeFrom,
-    sulphurDioxide: AllergenStatus.FreeFrom,
-    lupin: AllergenStatus.FreeFrom,
-    mollusc: AllergenStatus.FreeFrom,
-  };
+  const getProductTreeStub: Stub<typeof ProductTreeService> = stub(
+    ProductTreeService,
+    "getProductTree",
+    (treeCode) => Promise.resolve(testProductTrees[treeCode])
+  );
 
-  const actualAllergens = AllergensService.aggregateAllergens(ingredients);
+  try {
+    const item = await ItemService.getItem("test_0000001111_test");
+    const ingredients = await ItemService.getIngredients(item);
 
-  for (const key in expectedAllergens) {
-    const allergenKey = key as keyof Allergens;
+    const expected: Allergens = item.allergens!;
+    const actual = AllergensService.aggregateAllergens(ingredients);
 
-    const expectedAllergen = expectedAllergens[allergenKey];
-    const actualAllergen = actualAllergens[allergenKey];
-
-    assertEquals(actualAllergen, expectedAllergen);
+    assertEquals(actual, expected);
+  } finally {
+    getItemStub.restore();
+    getProductTreeStub.restore();
   }
 });
