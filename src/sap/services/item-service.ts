@@ -1,55 +1,12 @@
 import { IngredientUsage } from "../../models/ingredient.ts";
-import { AllergenStatus } from "../../models/allergens.ts";
 import { Item } from "../../models/item.ts";
 import { ProductTreeService } from "./product-tree-service.ts";
 import { SapService } from "./sap-service.ts";
 import { IngredientService } from "../../services/ingredient-service.ts";
+import { SapItemData } from "../models/sap-item-data.ts";
+import { mapSapItemDataToItem } from "../mapper/sap-item-mapper.ts";
 
 export class ItemService {
-  /**
-   * Parses a localized string-represented number to a float.
-   *
-   * @param value The string value to parse.
-   * @returns Parsed floating point number.
-   * @throws If the value is missing, empty, or not a valid number.
-   */
-  private static parseLocalizedNumber(value?: string): number {
-    if (!value) {
-      throw new Error("Numeric value is missing or empty");
-    }
-
-    const parsed = parseFloat(value.replace(",", "."));
-
-    if (isNaN(parsed)) {
-      throw new Error(`Invalid numeric value: ${value}`);
-    }
-
-    return parsed;
-  }
-
-  /**
-   * Converts a string value to an AllergenStatus enum value.
-   *
-   * @param value The string representation of allergen status.
-   * @returns Corresponding AllergenStatus enum.
-   * @throws If the value is missing or unknown.
-   */
-  private static parseAllergenStatus(value?: string): AllergenStatus {
-    if (!value) {
-      throw new Error("Allergen status is missing or empty");
-    }
-    switch (value) {
-      case "Free from":
-        return AllergenStatus.FreeFrom;
-      case "May contain traces of":
-        return AllergenStatus.MayContainTraces;
-      case "In product":
-        return AllergenStatus.InProduct;
-      default:
-        throw new Error(`Unknown allergen status: ${value}`);
-    }
-  }
-
   /**
    * Validates if the given item code string consists only of digits.
    *
@@ -109,57 +66,11 @@ export class ItemService {
 
     const selectQuery = fields.join(",");
 
-    const data = await SapService.sapFetch(
+    const data: SapItemData = await SapService.sapFetch(
       `/Items('${itemCode}')?$select=${selectQuery}`
     );
 
-    const item: Item = {
-      itemCode: data.ItemCode,
-      itemName: data.ItemName,
-      treeType: data.TreeType,
-      uCCFType: data.U_CCF_Type,
-    };
-
-    if (item.uCCFType === "Råvare") {
-      item.nutrients = {
-        energyKj: this.parseLocalizedNumber(data.U_BOYX_Energi),
-        energyKcal: this.parseLocalizedNumber(data.U_BOYX_Energik),
-        fat: this.parseLocalizedNumber(data.U_BOYX_fedt),
-        fattyAcid: this.parseLocalizedNumber(data.U_BOYX_fedtsyre),
-        carbohydrate: this.parseLocalizedNumber(data.U_BOYX_Kulhydrat),
-        sugars: this.parseLocalizedNumber(data.U_BOYX_sukkerarter),
-        protein: this.parseLocalizedNumber(data.U_BOYX_Protein),
-        salt: this.parseLocalizedNumber(data.U_BOYX_salt),
-      };
-
-      item.allergens = {
-        gluten: this.parseAllergenStatus(data.U_BOYX_gluten),
-        shellfish: this.parseAllergenStatus(data.U_BOYX_Krebsdyr),
-        egg: this.parseAllergenStatus(data.U_BOYX_aag),
-        fish: this.parseAllergenStatus(data.U_BOYX_fisk),
-        peanut: this.parseAllergenStatus(data.U_BOYX_JN),
-        soy: this.parseAllergenStatus(data.U_BOYX_soja),
-        milk: this.parseAllergenStatus(data.U_BOYX_ML),
-        almond: this.parseAllergenStatus(data.U_BOYX_mandel),
-        hazelnut: this.parseAllergenStatus(data.U_BOYX_hassel),
-        walnut: this.parseAllergenStatus(data.U_BOYX_val),
-        cashew: this.parseAllergenStatus(data.U_BOYX_Cashe),
-        pecan: this.parseAllergenStatus(data.U_BOYX_Pekan),
-        brazilNut: this.parseAllergenStatus(data.U_BOYX_peka),
-        pistachio: this.parseAllergenStatus(data.U_BOYX_Pistacie),
-        macadamiaNut: this.parseAllergenStatus(data.U_BOYX_Queensland),
-        celery: this.parseAllergenStatus(data.U_BOYX_Selleri),
-        mustard: this.parseAllergenStatus(data.U_BOYX_Sennep),
-        sesameSeed: this.parseAllergenStatus(data.U_BOYX_Sesam),
-        sulphurDioxide: this.parseAllergenStatus(data.U_BOYX_Svovldioxid),
-        lupin: this.parseAllergenStatus(data.U_BOYX_Lupin),
-        mollusc: this.parseAllergenStatus(data.U_BOYX_BL),
-      };
-
-      item.ingredientsDescriptionDa = data.U_CCF_Ingrediens_DA;
-    }
-
-    return item;
+    return mapSapItemDataToItem(data);
   }
 
   /**
